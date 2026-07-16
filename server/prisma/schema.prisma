@@ -1,0 +1,309 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  EVENT_ADMIN
+  FINANCE_ADMIN
+  CONTENT_ADMIN
+  VIEWER
+}
+
+model Admin {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  passwordHash     String
+  name             String
+  role             AdminRole @default(VIEWER)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  createdCandidates Candidate[] @relation("CandidateCreatedBy")
+  updatedCandidates Candidate[] @relation("CandidateUpdatedBy")
+
+  requestedRefunds Refund[] @relation("RefundRequestedBy")
+  approvedRefunds  Refund[] @relation("RefundApprovedBy")
+}
+
+enum CandidateCategory {
+  STAR
+  MOON
+  QUEEN
+}
+
+model Candidate {
+  id              String            @id @default(uuid())
+  candidateNumber String
+  category        CandidateCategory
+
+  nickname        String
+  prefix          String?
+  firstName       String
+  lastName        String
+  fullName        String
+
+  studentId       String?           @unique
+  faculty         String
+  major           String?
+  year            Int?
+  classRoom       String?
+
+  bio             String?           @db.Text
+  talent          String?           @db.Text
+  motto           String?           @db.Text
+  socialInstagram String?
+  socialFacebook  String?
+  socialTiktok    String?
+
+  profileImage    String?
+  coverImage      String?
+  galleryImages   Json?
+  introVideoUrl   String?
+
+  voteCount       Int               @default(0)
+  displayOrder    Int               @default(0)
+  isActive        Boolean           @default(true)
+  isDeleted       Boolean           @default(false)
+
+  createdById     String?
+  updatedById     String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  orders          Order[]
+  votes           Vote[]
+  createdBy       Admin?            @relation("CandidateCreatedBy", fields: [createdById], references: [id])
+  updatedBy       Admin?            @relation("CandidateUpdatedBy", fields: [updatedById], references: [id])
+
+  @@unique([candidateNumber, category])
+  @@index([category, isActive, isDeleted])
+  @@index([displayOrder])
+}
+
+model VotePackage {
+  id          String   @id @default(uuid())
+  title       String
+  price       Decimal  @db.Decimal(12, 2)
+  voteAmount  Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      Order[]
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  PAID
+  EXPIRED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  DISPUTED
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  EXPIRED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  CHARGEBACK
+}
+
+model Order {
+  id                  String       @id @default(uuid())
+  orderNo             String       @unique
+  idempotencyKey      String       @unique
+
+  candidateId         String
+  packageId           String
+
+  customerName        String?
+  customerContact     String?
+  customerContactHash String?
+  customerIpHash      String?
+  userAgent           String?
+
+  amount              Decimal      @db.Decimal(12, 2)
+  currency            String       @default("THB")
+  expectedVoteAmount  Int
+
+  status              OrderStatus  @default(PENDING)
+  paymentProvider     String?
+  providerReference   String?      @unique
+  paymentMethod       String?
+  qrCodeUrl           String?
+  qrPayload           String?      @db.Text
+  slipUrl             String?
+  expiresAt           DateTime?
+  paidAt              DateTime?
+  cancelledAt         DateTime?
+  refundedAt          DateTime?
+
+  failureCode         String?
+  failureMessage      String?      @db.Text
+  internalNote        String?      @db.Text
+
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  candidate           Candidate    @relation(fields: [candidateId], references: [id])
+  package             VotePackage  @relation(fields: [packageId], references: [id])
+  vote                Vote?
+  transactions        PaymentTransaction[]
+  refunds             Refund[]
+  auditLogs           AuditLog[]
+
+  @@index([status, createdAt])
+  @@index([candidateId, createdAt])
+  @@index([customerContactHash])
+  @@index([providerReference])
+}
+
+model PaymentTransaction {
+  id                    String        @id @default(uuid())
+  orderId               String
+
+  provider              String
+  providerTransactionId String?
+  providerEventId       String?
+  providerReference     String?
+
+  paymentMethod         String?
+  channel               String?
+  amount                Decimal       @db.Decimal(12, 2)
+  currency              String        @default("THB")
+  status                PaymentStatus @default(CREATED)
+
+  payerName             String?
+  payerBankCode         String?
+  payerBankName         String?
+  payerAccountMasked    String?
+  payerAccountHash      String?
+
+  receiverName          String?
+  receiverBankCode      String?
+  receiverBankName      String?
+  receiverAccountMasked String?
+
+  qrPayload             String?       @db.Text
+  paidAt                DateTime?
+  providerCreatedAt     DateTime?
+  providerUpdatedAt     DateTime?
+
+  rawRequestPayload     Json?
+  rawResponsePayload    Json?
+  rawWebhookPayload     Json?
+  webhookHeaders        Json?
+  signatureValid        Boolean       @default(false)
+  verificationResult    Json?
+
+  retryCount            Int           @default(0)
+  lastRetryAt           DateTime?
+  errorCode             String?
+  errorMessage          String?       @db.Text
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  order                 Order         @relation(fields: [orderId], references: [id])
+  refunds               Refund[]
+
+  @@unique([provider, providerEventId])
+  @@unique([provider, providerTransactionId])
+  @@index([orderId, status])
+  @@index([providerReference])
+  @@index([paidAt])
+}
+
+model Vote {
+  id          String   @id @default(uuid())
+  candidateId String
+  orderId     String   @unique
+  quantity    Int
+  createdAt   DateTime @default(now())
+
+  candidate   Candidate @relation(fields: [candidateId], references: [id])
+  order       Order     @relation(fields: [orderId], references: [id])
+
+  @@index([candidateId])
+}
+
+model Refund {
+  id                    String   @id @default(uuid())
+  orderId               String
+  transactionId         String?
+  requestedByAdminId    String?
+  approvedByAdminId     String?
+
+  amount                Decimal  @db.Decimal(12, 2)
+  reason                String   @db.Text
+  status                String   @default("PENDING")
+  providerRefundId      String?  @unique
+  requestedAt           DateTime @default(now())
+  approvedAt            DateTime?
+  completedAt           DateTime?
+  failureReason         String?  @db.Text
+
+  order                 Order    @relation(fields: [orderId], references: [id])
+  transaction           PaymentTransaction? @relation(fields: [transactionId], references: [id])
+  requestedByAdmin      Admin?   @relation("RefundRequestedBy", fields: [requestedByAdminId], references: [id])
+  approvedByAdmin       Admin?   @relation("RefundApprovedBy", fields: [approvedByAdminId], references: [id])
+
+  @@index([orderId, status])
+}
+
+model PaymentWebhookLog {
+  id                    String   @id @default(uuid())
+  provider              String
+  providerEventId       String?
+  providerTransactionId String?
+  eventType             String?
+  httpStatus            Int?
+  signatureValid        Boolean  @default(false)
+  isProcessed           Boolean  @default(false)
+  processingError       String?  @db.Text
+
+  requestHeaders        Json?
+  payload               Json
+  receivedAt            DateTime @default(now())
+  processedAt           DateTime?
+
+  @@unique([provider, providerEventId])
+  @@index([providerTransactionId])
+  @@index([receivedAt])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  adminId     String?
+  action      String
+  entityType  String
+  entityId    String
+  beforeData  Json?
+  afterData   Json?
+  createdAt   DateTime @default(now())
+
+  order       Order?   @relation(fields: [orderId], references: [id])
+  orderId     String?
+}
+
+model SystemSettings {
+  id               String   @id @default("default")
+  isRankingVisible Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
+}
