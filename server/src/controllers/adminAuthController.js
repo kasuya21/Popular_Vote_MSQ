@@ -31,7 +31,7 @@ const login = async (req, res, next) => {
     res.cookie('admin_token', token, {
       httpOnly: true,
       secure: isProd,
-      sameSite: 'lax',
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
@@ -50,9 +50,12 @@ const login = async (req, res, next) => {
 };
 
 const logout = (req, res) => {
+  const isProd = process.env.NODE_ENV === 'production';
   res.cookie('admin_token', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax'
   });
   
   res.status(200).json({ success: true, data: {} });
