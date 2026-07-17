@@ -57,72 +57,27 @@ export function generatePromptPayPayload(target, amount) {
   return payload + crc16ccitt(payload);
 }
 
+import QRCode from 'qrcode';
+
 /**
  * Draw the PromptPay QR code onto an HTML Canvas element.
- * Uses the built-in QR encoding from the browser via dynamically loading qrcode-generator.
+ * Uses the 'qrcode' npm package.
  * @param {HTMLCanvasElement} canvas 
  * @param {string} payload - EMV payload string
  * @param {number} [size=260] - Canvas size in pixels
  */
 export function drawPromptPayQR(canvas, payload, size = 260) {
   return new Promise((resolve, reject) => {
-    // Use qrcode-generator via CDN (loaded once)
-    if (!window.__qrgen) {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-      script.onload = () => {
-        window.__qrgen = true;
-        _drawQR(canvas, payload, size, resolve, reject);
-      };
-      script.onerror = reject;
-      document.head.appendChild(script);
-    } else {
-      _drawQR(canvas, payload, size, resolve, reject);
-    }
-  });
-}
-
-function _drawQR(canvas, payload, size, resolve, reject) {
-  try {
-    // Use a temp div with QRCode library
-    const tempDiv = document.createElement('div');
-    tempDiv.style.display = 'none';
-    document.body.appendChild(tempDiv);
-
-    new window.QRCode(tempDiv, {
-      text: payload,
+    QRCode.toCanvas(canvas, payload, {
       width: size,
-      height: size,
-      correctLevel: window.QRCode.CorrectLevel.M,
-    });
-
-    // QRCode renders an img after a tick
-    setTimeout(() => {
-      const img = tempDiv.querySelector('img') || tempDiv.querySelector('canvas');
-      if (!img) { document.body.removeChild(tempDiv); return reject(new Error('QR img not found')); }
-
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-
-      if (img.tagName === 'CANVAS') {
-        ctx.drawImage(img, 0, 0, size, size);
-        document.body.removeChild(tempDiv);
-        resolve();
-      } else {
-        img.onload = () => {
-          ctx.drawImage(img, 0, 0, size, size);
-          document.body.removeChild(tempDiv);
-          resolve();
-        };
-        if (img.complete) {
-          ctx.drawImage(img, 0, 0, size, size);
-          document.body.removeChild(tempDiv);
-          resolve();
-        }
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
       }
-    }, 100);
-  } catch (err) {
-    reject(err);
-  }
+    }, function (error) {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
 }

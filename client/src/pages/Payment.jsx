@@ -201,204 +201,256 @@ const Payment = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">การชำระเงิน</h1>
-        <p className="text-slate-500 font-mono">Ref: {order.orderNo}</p>
-      </div>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
+      <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.08)] border border-white/60 overflow-hidden relative">
+        {/* Decorative Top Gradient */}
+        <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-rose-500 opacity-20 pointer-events-none" />
 
-      <div className="glass-card overflow-hidden">
-        {status === 'PENDING' && (
-          <div className="p-6 md:p-10 flex flex-col items-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-600 font-medium text-sm mb-8">
-              <Clock size={16} />
-              <span>รอการชำระเงิน</span>
-            </div>
-            
-            {/* QR Code Canvas */}
-            <div
-              className={`bg-white p-3 rounded-2xl border-2 shadow-sm mb-3 relative flex items-center justify-center transition-all duration-500 ${
-                showPaidOverlay ? 'border-green-400' : 'border-slate-200'
-              }`}
-              style={{ width: 292, height: 292 }}
-            >
-              <canvas ref={qrCanvasRef} width={260} height={260} className={`rounded-lg transition-all duration-500 ${showPaidOverlay ? 'opacity-30 blur-sm' : ''}`} />
-
-              {/* Paid overlay */}
-              {showPaidOverlay && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm" style={{ animation: 'qrSuccessIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both' }}>
-                  <style>{`
-                    @keyframes qrSuccessIn {
-                      0% { opacity: 0; transform: scale(0.6); }
-                      100% { opacity: 1; transform: scale(1); }
-                    }
-                  `}</style>
-                  <div className="w-20 h-20 rounded-full flex items-center justify-center mb-3 shadow-lg"
-                    style={{ animation: 'qrSuccessIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both', backgroundColor: paidSuccess ? '#dcfce7' : '#d1fae5' }}>
-                    <CheckCircle2 size={44} className={paidSuccess ? 'text-emerald-500' : 'text-green-500'} strokeWidth={2.5} />
-                  </div>
-                  {paidSuccess ? (
-                    <>
-                      <p className="text-emerald-700 font-bold text-base">โหวตสำเร็จ! 🎉</p>
-                      <p className="text-emerald-600 text-xs mt-1">กำลังไปหน้าอันดับ...</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-green-700 font-bold text-base">รับสลิปแล้ว ✅</p>
-                      <p className="text-green-600 text-xs mt-1">รอแอดมินตรวจสอบ</p>
-                      <p className="text-slate-400 text-xs mt-0.5">ระบบเช็กให้อัตโนมัติทุก 30 วิ</p>
-                    </>
-                  )}
+        <div className="relative p-6 sm:p-12">
+          {status === 'PENDING' && (
+            <div className="flex flex-col items-center">
+              <div className="w-full flex justify-between items-start mb-8">
+                <div>
+                  <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">ชำระเงิน</h1>
+                  <p className="text-sm font-medium text-slate-500 mt-1">Ref: {order.orderNo}</p>
                 </div>
-              )}
-
-              <div className={`absolute inset-0 border-4 rounded-xl m-1.5 pointer-events-none transition-colors duration-500 ${showPaidOverlay ? 'border-green-400' : 'border-violet-500'}`} />
-            </div>
-
-            {/* Download QR */}
-            <button
-              onClick={handleDownloadQR}
-              className="flex items-center gap-1.5 text-sm text-violet-600 hover:text-violet-800 font-medium mb-8 px-4 py-1.5 rounded-full border border-violet-200 hover:bg-violet-50 transition-all"
-            >
-              <Download size={14} />
-              ดาวน์โหลด QR Code
-            </button>
-            
-            <div className="text-center mb-8 w-full max-w-sm">
-              <p className="text-slate-500 mb-1">ยอดเงินที่ต้องชำระ</p>
-              <p className="text-4xl font-extrabold text-violet-700 mb-6">฿{Number(order.amount).toFixed(2)}</p>
-              
-              <div className="bg-slate-50 rounded-xl p-4 flex justify-between items-center mb-6">
-                <span className="text-slate-500 text-sm font-medium">QR หมดอายุใน</span>
-                <span className={`text-xl font-bold font-mono ${timeLeft < 300 ? 'text-rose-500' : 'text-slate-800'}`}>
-                  {formatTime(timeLeft)}
-                </span>
-              </div>
-              
-              {/* Slip Upload */}
-              <div className="w-full mb-6 text-left">
-                <label className="block text-sm font-medium text-slate-700 mb-2">อัปโหลดสลิปโอนเงิน</label>
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="file-input file-input-bordered file-input-primary w-full" 
-                />
-                {filePreview && (
-                  <div className="mt-4 p-3 border border-slate-200 rounded-xl bg-slate-50">
-                    <p className="text-xs text-slate-500 mb-2 text-center">ตัวอย่างสลิปที่เลือก</p>
-                    <img src={filePreview} alt="Slip Preview" className="max-h-48 mx-auto rounded-lg object-contain shadow-sm border border-slate-200" />
+                <div className="flex flex-col items-end">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-bold mb-2">
+                    <Clock size={14} className={timeLeft < 300 ? 'text-rose-500 animate-pulse' : ''} />
+                    <span className={timeLeft < 300 ? 'text-rose-600' : ''}>{formatTime(timeLeft)}</span>
                   </div>
-                )}
+                  <span className="text-[10px] text-slate-400 font-medium">เวลาที่เหลือ</span>
+                </div>
               </div>
               
-              <button 
-                onClick={handleUpload}
-                disabled={isUploading || !file}
-                className="w-full py-4 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors disabled:bg-slate-300 mb-4"
+              {/* Receipt-like Amount Area */}
+              <div className="w-full bg-slate-50/80 rounded-3xl p-6 mb-8 text-center border border-slate-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-fuchsia-500" />
+                <p className="text-sm font-medium text-slate-500 mb-2">ยอดเงินที่ต้องชำระ (บาท)</p>
+                <p className="text-5xl font-black text-slate-800 tracking-tight">
+                  {Number(order.amount).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+
+              {/* QR Code Container */}
+              <div className="relative group mb-8">
+                <div className="absolute -inset-1 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
+                <div
+                  className={`bg-white p-6 rounded-[2rem] border-2 relative flex flex-col items-center justify-center transition-all duration-500 ${
+                    showPaidOverlay ? 'border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.3)]' : 'border-slate-100 shadow-xl'
+                  }`}
+                >
+                  <div className="mb-4 bg-slate-800 text-white text-xs font-bold px-4 py-1.5 rounded-full tracking-wider uppercase flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span> PromptPay
+                  </div>
+                  
+                  <div className="relative" style={{ width: 260, height: 260 }}>
+                    <canvas ref={qrCanvasRef} width={260} height={260} className={`rounded-xl transition-all duration-500 ${showPaidOverlay ? 'opacity-20 blur-md scale-95' : 'scale-100'}`} />
+
+                    {/* Paid Overlay Animation */}
+                    {showPaidOverlay && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ animation: 'qrSuccessIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both' }}>
+                        <style>{`
+                          @keyframes qrSuccessIn {
+                            0% { opacity: 0; transform: scale(0.5) translateY(20px); }
+                            100% { opacity: 1; transform: scale(1) translateY(0); }
+                          }
+                          @keyframes float {
+                            0%, 100% { transform: translateY(0); }
+                            50% { transform: translateY(-5px); }
+                          }
+                        `}</style>
+                        <div className="w-24 h-24 rounded-full flex items-center justify-center mb-4 shadow-2xl bg-gradient-to-tr from-emerald-400 to-teal-300"
+                          style={{ animation: 'float 3s ease-in-out infinite' }}>
+                          <CheckCircle2 size={50} className="text-white" strokeWidth={3} />
+                        </div>
+                        {paidSuccess ? (
+                          <>
+                            <p className="text-emerald-600 font-black text-xl tracking-tight">โหวตสำเร็จ!</p>
+                            <p className="text-emerald-500/80 text-sm font-medium mt-1">กำลังไปหน้าอันดับ...</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-teal-600 font-black text-xl tracking-tight">รับสลิปแล้ว</p>
+                            <p className="text-teal-500/80 text-sm font-medium mt-1">รอแอดมินตรวจสอบ</p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Download QR button */}
+              <button
+                onClick={handleDownloadQR}
+                className="flex items-center gap-2 text-sm text-slate-500 hover:text-violet-600 font-semibold mb-10 px-6 py-2.5 rounded-full bg-slate-50 hover:bg-violet-50 transition-all shadow-sm border border-slate-200 hover:border-violet-200"
               >
-                {isUploading ? (
-                  <><span className="loading loading-spinner loading-sm"></span> กำลังอัปโหลด...</>
+                <Download size={16} />
+                บันทึก QR Code
+              </button>
+              
+              {/* Upload Slip Area */}
+              <div className="w-full">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px bg-slate-200 flex-1"></div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">แนบหลักฐานการโอนเงิน</span>
+                  <div className="h-px bg-slate-200 flex-1"></div>
+                </div>
+
+                <div className="relative group cursor-pointer">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                    title=" "
+                  />
+                  <div className={`w-full rounded-3xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center p-8
+                    ${filePreview ? 'border-violet-400 bg-violet-50/50' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-violet-300'}`}
+                  >
+                    {filePreview ? (
+                      <div className="flex flex-col items-center">
+                        <div className="relative mb-3">
+                          <img src={filePreview} alt="Slip Preview" className="h-40 object-contain rounded-xl shadow-md border border-white" />
+                          <div className="absolute -top-3 -right-3 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white">
+                            <CheckCircle2 size={16} strokeWidth={3} />
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold text-violet-600">แตะเพื่อเปลี่ยนรูปภาพ</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
+                          <UploadCloud size={28} className="text-violet-500" />
+                        </div>
+                        <p className="text-base font-bold text-slate-700 mb-1">อัปโหลดสลิปที่นี่</p>
+                        <p className="text-xs text-slate-400 font-medium">รองรับ JPG, PNG ขนาดไม่เกิน 5MB</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={handleUpload}
+                  disabled={isUploading || !file}
+                  className="w-full mt-6 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_8px_20px_rgba(124,58,237,0.3)] hover:shadow-[0_8px_25px_rgba(124,58,237,0.4)] hover:-translate-y-0.5 active:translate-y-0 text-lg"
+                >
+                  {isUploading ? (
+                    <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> กำลังส่งข้อมูล...</>
+                  ) : (
+                    <>ยืนยันการชำระเงิน <ChevronRight size={20} /></>
+                  )}
+                </button>
+
+                {/* Dev Only */}
+                {process.env.NODE_ENV === 'development' && (
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await triggerMockWebhook(order.providerReference, order.amount);
+                        alert('จำลองการยิง Webhook สำเร็จ!');
+                        setTimeout(() => handleCheckStatus(), 1500);
+                      } catch (error) {
+                        console.error(error);
+                      }
+                    }}
+                    className="w-full mt-4 py-2 text-slate-400 hover:text-slate-600 text-xs font-medium flex justify-center items-center gap-1 opacity-50 hover:opacity-100 transition-opacity"
+                  >
+                    🛠️ Mock Webhook (Dev Mode)
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {status === 'PROCESSING' && (
+            <div className="py-10 flex flex-col items-center text-center">
+              <div className="relative mb-8">
+                <div className="absolute inset-0 bg-blue-400 rounded-full blur-xl opacity-20 animate-pulse"></div>
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-full flex items-center justify-center relative shadow-lg">
+                  <Clock size={48} className="text-blue-500 animate-[spin_4s_linear_infinite]" />
+                </div>
+              </div>
+              <h2 className="text-3xl font-black text-slate-800 mb-3">กำลังตรวจสอบสลิป</h2>
+              <p className="text-slate-500 mb-8 font-medium max-w-sm">
+                ระบบได้รับสลิปของคุณแล้ว แอดมินกำลังตรวจสอบความถูกต้อง อาจใช้เวลาสักครู่...
+              </p>
+              
+              <div className="w-full bg-slate-50 rounded-2xl p-5 mb-8 text-left border border-slate-100 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0">
+                  <RefreshCw size={20} className="text-violet-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-700">ระบบเช็กให้อัตโนมัติ</p>
+                  <p className="text-xs text-slate-500">คุณสามารถออกจากหน้านี้ได้เลย</p>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleCheckStatus}
+                disabled={isChecking}
+                className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 shadow-lg hover:shadow-xl"
+              >
+                {isChecking ? (
+                  <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> กำลังโหลด...</>
                 ) : (
-                  <><UploadCloud size={18} /> ยืนยันการชำระเงิน</>
+                  <>เช็กสถานะด้วยตัวเอง</>
                 )}
               </button>
+            </div>
+          )}
 
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-slate-200"></div>
-                <span className="flex-shrink-0 mx-4 text-slate-400 text-xs">หรือสำหรับการทดสอบ</span>
-                <div className="flex-grow border-t border-slate-200"></div>
+          {status === 'PAID' && (
+            <div className="py-10 flex flex-col items-center text-center">
+              <div className="relative mb-8">
+                <div className="absolute inset-0 bg-emerald-400 rounded-full blur-xl opacity-30"></div>
+                <div className="w-28 h-28 bg-gradient-to-tr from-emerald-400 to-teal-400 rounded-full flex items-center justify-center relative shadow-2xl border-4 border-white">
+                  <CheckCircle2 size={56} className="text-white" strokeWidth={3} />
+                </div>
+              </div>
+              <h2 className="text-4xl font-black text-slate-800 mb-3 tracking-tight">โหวตสำเร็จ!</h2>
+              <p className="text-slate-500 mb-10 font-medium text-lg">ขอบคุณที่ร่วมสนับสนุน {order.candidateName}</p>
+              
+              <div className="w-full bg-gradient-to-br from-violet-50 to-fuchsia-50 rounded-3xl p-6 mb-10 border border-violet-100 shadow-inner">
+                <div className="flex justify-between items-center mb-4 pb-4 border-b border-violet-200/50">
+                  <span className="text-violet-600/80 font-semibold text-sm">เลขออเดอร์</span>
+                  <span className="font-mono text-violet-900 font-bold bg-white px-3 py-1 rounded-lg shadow-sm text-sm">{order.orderNo}</span>
+                </div>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-violet-600/80 font-semibold text-sm">แพ็กเกจ</span>
+                  <span className="font-bold text-violet-900">{order.package.name}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-violet-600/80 font-semibold text-sm">ได้รับคะแนน</span>
+                  <span className="font-black text-fuchsia-600 text-2xl">+{order.package.voteAmount} <span className="text-base font-bold text-fuchsia-600/80">โหวต</span></span>
+                </div>
               </div>
 
-              <button 
-                onClick={async () => {
-                  try {
-                    await triggerMockWebhook(order.providerReference, order.amount);
-                    alert('จำลองการยิง Webhook สำเร็จ! ระบบจะโหลดสถานะใหม่ใน 2 วินาที...');
-                    setTimeout(() => handleCheckStatus(), 2000);
-                  } catch (error) {
-                    console.error(error);
-                    alert('เกิดข้อผิดพลาดในการจำลอง Webhook');
-                  }
-                }}
-                className="w-full mt-2 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors text-sm"
-              >
-                🛠️ จำลองจ่ายเงินสำเร็จ (Auto Webhook)
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4 w-full">
+                <Link to="/" className="flex-1 py-4 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-2xl transition-all border-2 border-slate-200 text-center">
+                  กลับหน้าแรก
+                </Link>
+                <Link to="/ranking" className="flex-1 py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-bold rounded-2xl transition-all shadow-[0_8px_20px_rgba(124,58,237,0.3)] hover:shadow-[0_8px_25px_rgba(124,58,237,0.4)] flex items-center justify-center gap-2">
+                  ดูอันดับคะแนน <ChevronRight size={20} />
+                </Link>
+              </div>
             </div>
-            
-            <p className="text-sm text-slate-400 text-center max-w-sm">
-              เมื่อโอนเงินสำเร็จ กรุณาแนบสลิปและกดยืนยันการชำระเงิน
-            </p>
-          </div>
-        )}
+          )}
 
-        {status === 'PROCESSING' && (
-          <div className="p-8 md:p-12 flex flex-col items-center text-center">
-            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-              <Clock size={40} className="text-blue-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">อัปโหลดสลิปสำเร็จ</h2>
-            <p className="text-slate-500 mb-4">ระบบได้รับสลิปของคุณแล้ว กรุณารอแอดมินตรวจสอบความถูกต้อง (อาจใช้เวลา 5-15 นาที)</p>
-            <p className="text-sm text-slate-400 mb-8">คุณสามารถออกจากหน้านี้และกลับมาตรวจสอบสถานะภายหลังได้ที่เมนู "ตรวจสอบสถานะ"</p>
-            <button 
-              onClick={handleCheckStatus}
-              disabled={isChecking}
-              className="w-full max-w-xs py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors disabled:bg-slate-400"
-            >
-              {isChecking ? (
-                <><span className="loading loading-spinner loading-sm"></span> กำลังตรวจสอบ...</>
-              ) : (
-                <><RefreshCw size={18} /> โหลดสถานะล่าสุด</>
-              )}
-            </button>
-          </div>
-        )}
-
-        {status === 'PAID' && (
-          <div className="p-8 md:p-12 flex flex-col items-center text-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
-              <CheckCircle2 size={40} className="text-green-500" />
-            </div>
-            <h2 className="text-3xl font-bold text-slate-800 mb-2">โหวตสำเร็จ!</h2>
-            <p className="text-slate-500 mb-8">ขอบคุณที่ร่วมสนับสนุน {order.candidateName}</p>
-            <div className="w-full max-w-sm bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-slate-500 text-sm">เลขออเดอร์</span>
-                <span className="font-mono text-slate-700 text-sm">{order.orderNo}</span>
+          {status === 'EXPIRED' && (
+            <div className="py-10 flex flex-col items-center text-center">
+              <div className="w-24 h-24 bg-rose-50 border border-rose-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                <AlertCircle size={48} className="text-rose-500" strokeWidth={2.5} />
               </div>
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-slate-500 text-sm">แพ็กเกจ</span>
-                <span className="font-medium text-slate-700">{order.package.name}</span>
-              </div>
-              <div className="flex justify-between items-center pt-3 border-t border-slate-200">
-                <span className="text-slate-500 font-medium">ได้รับคะแนน</span>
-                <span className="font-bold text-violet-600 text-lg">+{order.package.voteAmount} โหวต</span>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-              <Link to="/" className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors">
-                กลับหน้าแรก
-              </Link>
-              <Link to="/ranking" className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-1">
-                ดูอันดับคะแนน <ChevronRight size={18} />
+              <h2 className="text-3xl font-black text-slate-800 mb-3">หมดเวลาชำระเงิน</h2>
+              <p className="text-slate-500 mb-10 font-medium">รายการนี้หมดอายุเนื่องจากไม่ได้รับการชำระเงินภายในเวลาที่กำหนด</p>
+              <Link to="/candidates" className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2">
+                <RefreshCw size={18} /> เริ่มทำรายการใหม่
               </Link>
             </div>
-          </div>
-        )}
-
-        {status === 'EXPIRED' && (
-          <div className="p-8 md:p-12 flex flex-col items-center text-center">
-            <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mb-6">
-              <AlertCircle size={40} className="text-rose-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">QR Code หมดอายุ</h2>
-            <p className="text-slate-500 mb-8">รายการนี้หมดอายุเนื่องจากไม่ได้รับการชำระเงินภายในเวลาที่กำหนด</p>
-            <Link to="/candidates" className="px-8 py-3 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl transition-colors shadow-md">
-              สร้างรายการโหวตใหม่
-            </Link>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
