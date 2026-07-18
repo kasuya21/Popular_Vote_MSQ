@@ -26,7 +26,6 @@ const Navbar = () => {
     { name: 'หน้าแรก', path: '/' },
     { name: 'ผู้เข้าประกวด', path: '/candidates' },
     { name: 'อันดับคะแนน', path: '/ranking' },
-    { name: 'เช็คสถานะ', path: '/track-order' },
   ];
 
   const isActive = (path) => {
@@ -90,7 +89,7 @@ const Navbar = () => {
                 ผู้ดูแลระบบ
               </Link>
               <Link to="/candidates" className="btn-primary-gradient px-6 py-2.5 rounded-full text-sm flex items-center gap-2">
-                โหวตเลย <ArrowRight size={15} />
+                ดูผู้สมัครทั้งหมด <ArrowRight size={15} />
               </Link>
             </div>
 
@@ -125,7 +124,7 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
                 className="block btn-primary-gradient text-center py-3 rounded-xl text-sm mt-3"
               >
-                โหวตเลย
+                ดูผู้สมัครทั้งหมด
               </Link>
             </div>
           )}

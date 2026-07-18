@@ -13,14 +13,7 @@ router.get('/rankings', candidateController.getRankings);
 // Packages
 router.get('/vote-packages', packageController.getPublicPackages);
 
-// Orders
-router.post('/orders', orderController.createOrder);
-router.get('/orders/by-email', orderController.getOrdersByEmail);
-router.get('/orders/:orderNo', orderController.getOrder);
-router.post('/orders/:orderNo/upload-slip', require('../middleware/upload').single('slip'), orderController.uploadSlip);
-
-// Payments & Webhooks
-router.post('/payments/webhook', orderController.handleWebhook);
-router.post('/payments/mock-webhook', orderController.mockWebhook); // DEV only
+// Orders & Payments (Moved to Admin POS system)
+// Note: Online voting is disabled, so public order routes have been removed.
 
 module.exports = router;

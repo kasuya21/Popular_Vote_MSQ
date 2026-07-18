@@ -1,9 +1,9 @@
 import React from 'react';
-import { Star, Moon, Heart, Crown } from 'lucide-react';
+import { Star, Moon, Heart, Crown, Lock } from 'lucide-react';
 import { resolveImageUrl } from '../utils/imageUtils';
 import ImageWithRetry from './ImageWithRetry';
 
-const CandidateCard = ({ candidate, onClick }) => {
+const CandidateCard = ({ candidate, isRankingVisible = true, onClick }) => {
   const isStar = candidate.category === 'STAR';
   const isMoon = candidate.category === 'MOON';
   const isQueen = candidate.category === 'QUEEN';
@@ -47,8 +47,17 @@ const CandidateCard = ({ candidate, onClick }) => {
           color: '#f0c94b',
         }}
       >
-        <Heart size={14} className="text-[#d4a017] fill-[#d4a017]" />
-        <span className="font-sans">{candidate.voteCount?.toLocaleString() || 0}</span>
+        {!isRankingVisible ? (
+          <>
+            <Lock size={14} className="text-[#d4a017]" />
+            <span className="font-sans text-[10px] text-[#e8dfc8]/60">ซ่อนคะแนน</span>
+          </>
+        ) : (
+          <>
+            <Heart size={14} className="text-[#d4a017] fill-[#d4a017]" />
+            <span className="font-sans">{candidate.voteCount?.toLocaleString() || 0}</span>
+          </>
+        )}
       </div>
 
       {/* Image Container */}
@@ -111,7 +120,7 @@ const CandidateCard = ({ candidate, onClick }) => {
           <div className="block w-full text-center py-3.5 rounded-2xl font-bold btn-primary-gradient opacity-90 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-300 tracking-widest text-sm"
             style={{ fontFamily: "'Cinzel', serif" }}
           >
-            ดูโปรไฟล์และโหวต
+            ดูโปรไฟล์
           </div>
         </div>
       </div>

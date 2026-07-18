@@ -1,12 +1,13 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Package, CreditCard, BarChart2, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, Users, Package, CreditCard, BarChart2, LogOut, Zap, Store } from 'lucide-react';
 
 const AdminLayout = () => {
   const location = useLocation();
 
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/admin' },
+    { name: 'POS Walk-in', icon: <Store size={18} />, path: '/admin/pos' },
     { name: 'ผู้สมัคร', icon: <Users size={18} />, path: '/admin/candidates' },
     { name: 'แพ็กเกจ', icon: <Package size={18} />, path: '/admin/packages' },
     { name: 'รายการชำระเงิน', icon: <CreditCard size={18} />, path: '/admin/orders' },

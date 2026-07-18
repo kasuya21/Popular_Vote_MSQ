@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Search, Filter, Star, Moon, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CandidateCard from '../components/CandidateCard';
-import { getCandidates } from '../services/api';
+import { getCandidates, getSystemSettings } from '../services/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const categoryTabs = [
   { id: 'ALL', label: 'ทั้งหมด', icon: Filter },
@@ -16,6 +17,11 @@ const Candidates = () => {
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+
+  const { data: settings = { isRankingVisible: true } } = useQuery({
+    queryKey: ['settings'],
+    queryFn: getSystemSettings
+  });
 
   const { data: allCandidates = [], isLoading } = useQuery({
     queryKey: ['candidates'],
@@ -108,7 +114,7 @@ const Candidates = () => {
       {/* Grid */}
       {isLoading ? (
         <div className="flex justify-center py-20">
-          <span className="loading loading-spinner loading-lg text-[#d4a017]"></span>
+          <LoadingSpinner />
         </div>
       ) : filteredCandidates.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
@@ -116,6 +122,7 @@ const Candidates = () => {
             <CandidateCard
               key={candidate.id}
               candidate={candidate}
+              isRankingVisible={settings.isRankingVisible}
               onClick={() => navigate(`/candidate/${candidate.id}`)}
             />
           ))}

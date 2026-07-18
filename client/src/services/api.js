@@ -104,6 +104,11 @@ export const getAdminPayments = async () => {
   return data.data;
 };
 
+export const deleteAdminPayment = async (orderNo) => {
+  const { data } = await api.delete(`/admin/orders/${orderNo}`);
+  return data;
+};
+
 export const getAdminPackages = async () => {
   const { data } = await api.get('/admin/vote-packages');
   return data.data;
@@ -156,6 +161,11 @@ export const approveSlip = async (orderNo) => {
 
 export const rejectSlip = async (orderNo, reason) => {
   const { data } = await api.post(`/admin/orders/${orderNo}/reject`, { reason });
+  return data;
+};
+
+export const createPOSOrder = async (orderData) => {
+  const { data } = await api.post('/admin/orders/pos', orderData);
   return data;
 };
 

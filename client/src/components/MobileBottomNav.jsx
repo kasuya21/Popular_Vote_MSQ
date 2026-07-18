@@ -16,9 +16,8 @@ const MobileBottomNav = () => {
 
   const navItems = [
     { name: 'หน้าแรก', path: '/', icon: Home },
-    { name: 'โหวต', path: '/candidates', icon: Users },
+    { name: 'ผู้สมัคร', path: '/candidates', icon: Users },
     { name: 'อันดับ', path: '/ranking', icon: Trophy },
-    { name: 'สถานะ', path: '/track-order', icon: Search },
   ];
 
   const isActive = (path) => {

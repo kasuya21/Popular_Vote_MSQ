@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Activity, CreditCard, AlertTriangle, FileText, CheckCircle2, RotateCcw } from 'lucide-react';
 import { getReconciliation, getRefunds } from '../../services/api';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const AdminReports = () => {
   const [activeTab, setActiveTab] = useState('RECONCILIATION');
@@ -58,7 +59,7 @@ const AdminReports = () => {
           <h3 className="font-bold text-slate-800 mb-6 text-lg">สรุปการกระทบยอดระบบ (Mock PromptPay)</h3>
           
           {isLoadingRecon ? (
-            <div className="flex justify-center py-10"><span className="loading loading-spinner text-violet-600"></span></div>
+            <div className="flex justify-center py-10"><LoadingSpinner small /></div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
@@ -114,7 +115,7 @@ const AdminReports = () => {
                 {isLoadingRefunds ? (
                   <tr>
                     <td colSpan="5" className="px-6 py-8 text-center text-slate-500">
-                      <span className="loading loading-spinner text-violet-500"></span>
+                      <LoadingSpinner small />
                     </td>
                   </tr>
                 ) : refundsData.length === 0 ? (

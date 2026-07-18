@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Lock, Mail, AlertCircle } from 'lucide-react';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -93,7 +94,7 @@ const Login = () => {
             className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-[#050505] btn-primary-gradient hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#d4af37]/50 focus:ring-offset-[#0a0a0a] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
           >
             {isLoading ? (
-              <span className="loading loading-spinner loading-sm"></span>
+              <LoadingSpinner small />
             ) : (
               'เข้าสู่ระบบ'
             )}

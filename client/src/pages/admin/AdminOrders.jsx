@@ -1,22 +1,35 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, CheckCircle2, AlertCircle, Clock, FileText, Check, X, Image as ImageIcon } from 'lucide-react';
-import { getAdminPayments, approveSlip, rejectSlip } from '../../services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Search, Filter, CheckCircle2, AlertCircle, FileText, Trash2, XCircle } from 'lucide-react';
+import { getAdminPayments, deleteAdminPayment } from '../../services/api';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const AdminOrders = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const queryClient = useQueryClient();
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['adminPayments'],
     queryFn: getAdminPayments
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: deleteAdminPayment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminPayments'] });
+      // We also need to invalidate candidates since vote count changed
+      queryClient.invalidateQueries({ queryKey: ['adminCandidates'] });
+    },
+    onError: (error) => {
+      alert('เกิดข้อผิดพลาดในการลบ: ' + (error.response?.data?.message || error.message));
+    }
+  });
+
   const filteredOrders = orders.filter(order => {
     const matchStatus = statusFilter === 'ALL' || order.status === statusFilter;
     const matchSearch = order.orderNo.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.customerContact?.toLowerCase().includes(searchTerm.toLowerCase());
+                        order.customerName?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchStatus && matchSearch;
   });
 
@@ -30,16 +43,16 @@ const AdminOrders = () => {
     switch (status) {
       case 'PAID':
         return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium"><CheckCircle2 size={14} /> สำเร็จ</span>;
-      case 'PENDING':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium"><Clock size={14} /> รอชำระ</span>;
-      case 'PROCESSING':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium"><Clock size={14} /> รอตรวจสลิป</span>;
-      case 'EXPIRED':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium"><AlertCircle size={14} /> หมดอายุ</span>;
-      case 'FAILED':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium"><AlertCircle size={14} /> ล้มเหลว</span>;
+      case 'CANCELLED':
+        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium"><XCircle size={14} /> ยกเลิกแล้ว</span>;
       default:
         return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-[#a3a3a3] text-xs font-medium">{status}</span>;
+    }
+  };
+
+  const handleDelete = (orderNo) => {
+    if (window.confirm(`คำเตือน: การลบรายการนี้จะหักคะแนนคืนจากผู้สมัครทันที ยืนยันการลบรายการ ${orderNo} หรือไม่?`)) {
+      deleteMutation.mutate(orderNo);
     }
   };
 
@@ -47,8 +60,8 @@ const AdminOrders = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#f5f5f5]">รายการชำระเงิน</h1>
-          <p className="text-[#a3a3a3] text-sm mt-1">ตรวจสอบและจัดการรายการชำระเงินทั้งหมด</p>
+          <h1 className="text-2xl font-bold text-[#f5f5f5]">Log การเพิ่มคะแนน</h1>
+          <p className="text-[#a3a3a3] text-sm mt-1">ประวัติการชำระเงินและการเพิ่มคะแนนโหวต (สามารถลบเพื่อหักคะแนนคืนได้)</p>
         </div>
         <div className="flex gap-2">
           <button className="bg-[#050505] px-4 py-2 rounded-xl text-sm font-medium border border-[#d4af37]/30 text-[#d4af37] hover:bg-[#d4af37]/10 flex items-center gap-2 shadow-sm transition-colors">
@@ -63,7 +76,7 @@ const AdminOrders = () => {
             <Search className="absolute left-3 top-2.5 text-[#a3a3a3]" size={18} />
             <input 
               type="text" 
-              placeholder="ค้นหาเลขออเดอร์, ชื่อ, ข้อมูลติดต่อ..." 
+              placeholder="ค้นหาเลขออเดอร์, ชื่อลูกค้า..." 
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-[#d4af37]/30 bg-[#050505] focus:outline-none focus:ring-2 focus:ring-[#d4af37]/50 text-sm text-[#f5f5f5] placeholder-[#a3a3a3]"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -79,9 +92,7 @@ const AdminOrders = () => {
             >
               <option value="ALL">สถานะทั้งหมด</option>
               <option value="PAID">สำเร็จ (PAID)</option>
-              <option value="PROCESSING">รอตรวจสลิป (PROCESSING)</option>
-              <option value="PENDING">รอชำระ (PENDING)</option>
-              <option value="EXPIRED">หมดอายุ (EXPIRED)</option>
+              <option value="CANCELLED">ยกเลิก (CANCELLED)</option>
             </select>
           </div>
         </div>
@@ -90,64 +101,52 @@ const AdminOrders = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-[#050505]/50 text-[#a3a3a3] text-xs uppercase tracking-wider border-b border-[#d4af37]/20">
-                <th className="px-6 py-3 font-medium">เลขออเดอร์ / เวลา</th>
-                <th className="px-6 py-3 font-medium">ผู้โหวต / ติดต่อ</th>
-                <th className="px-6 py-3 font-medium">ผู้สมัครที่โหวตให้</th>
+                <th className="px-6 py-3 font-medium">รหัสรายการ / เวลา</th>
+                <th className="px-6 py-3 font-medium">ชื่อลูกค้า</th>
+                <th className="px-6 py-3 font-medium">ผู้สมัครที่ได้รับโหวต</th>
                 <th className="px-6 py-3 font-medium">ยอดเงิน</th>
                 <th className="px-6 py-3 font-medium">สถานะ</th>
+                <th className="px-6 py-3 font-medium">จัดการ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#d4af37]/10 text-sm">
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-[#a3a3a3]">
-                    <span className="loading loading-spinner loading-md text-[#d4af37]"></span>
+                  <td colSpan="6" className="px-6 py-8 text-center text-[#a3a3a3]">
+                    <LoadingSpinner />
                   </td>
                 </tr>
               ) : filteredOrders.map(order => (
-                <tr key={order.id} className="hover:bg-[#d4af37]/10 transition-colors">
+                <tr key={order.id} className={`hover:bg-[#d4af37]/10 transition-colors ${order.status === 'CANCELLED' ? 'opacity-50' : ''}`}>
                   <td className="px-6 py-4">
                     <p className="font-mono font-bold text-[#c0c0c0]">{order.orderNo}</p>
                     <p className="text-xs text-[#a3a3a3]">{formatDate(order.createdAt)}</p>
                   </td>
                   <td className="px-6 py-4">
                     <p className="font-medium text-[#f5f5f5]">{order.customerName}</p>
-                    <p className="text-xs text-[#a3a3a3]">{order.customerContact}</p>
                   </td>
                   <td className="px-6 py-4">
                     <p className="font-medium text-[#f5f5f5]">{order.candidate?.nickname}</p>
-                    <p className="text-xs text-[#d4af37] font-medium">+{order.expectedVoteAmount} โหวต</p>
+                    <p className={`text-xs font-medium ${order.status === 'CANCELLED' ? 'text-rose-400 line-through' : 'text-[#d4af37]'}`}>
+                      +{order.expectedVoteAmount} โหวต
+                    </p>
                   </td>
                   <td className="px-6 py-4 font-bold text-[#d4af37]">
                     ฿{Number(order.amount).toFixed(2)}
                   </td>
                   <td className="px-6 py-4">
                     {getStatusBadge(order.status)}
-                    {order.slipUrl && (
-                      <a href={order.slipUrl} target="_blank" rel="noopener noreferrer" className="block mt-2 text-xs text-[#d4af37] hover:text-[#f3e5ab] hover:underline flex items-center gap-1 transition-colors">
-                        <ImageIcon size={12}/> ดูสลิป
-                      </a>
-                    )}
-                    {order.status === 'PROCESSING' && (
-                      <div className="flex gap-2 mt-2">
-                        <button onClick={async () => {
-                          if(window.confirm('ยืนยันอนุมัติสลิปนี้?')) {
-                            await approveSlip(order.orderNo);
-                            window.location.reload();
-                          }
-                        }} className="p-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded hover:bg-emerald-500/20 transition-colors shadow-sm" title="อนุมัติ">
-                          <Check size={16} />
-                        </button>
-                        <button onClick={async () => {
-                          const reason = window.prompt('ระบุเหตุผลที่ปฏิเสธสลิปนี้:');
-                          if(reason) {
-                            await rejectSlip(order.orderNo, reason);
-                            window.location.reload();
-                          }
-                        }} className="p-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded hover:bg-rose-500/20 transition-colors shadow-sm" title="ปฏิเสธ">
-                          <X size={16} />
-                        </button>
-                      </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    {order.status === 'PAID' && (
+                      <button 
+                        onClick={() => handleDelete(order.orderNo)}
+                        disabled={deleteMutation.isPending}
+                        className="p-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg hover:bg-rose-500 hover:text-white transition-all shadow-sm group disabled:opacity-50" 
+                        title="ลบรายการและหักคะแนน"
+                      >
+                        {deleteMutation.isPending ? <LoadingSpinner small /> : <Trash2 size={16} className="group-hover:scale-110 transition-transform"/>}
+                      </button>
                     )}
                   </td>
                 </tr>
@@ -155,7 +154,7 @@ const AdminOrders = () => {
               
               {!isLoading && filteredOrders.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-[#a3a3a3]">
+                  <td colSpan="6" className="px-6 py-8 text-center text-[#a3a3a3]">
                     ไม่พบข้อมูล
                   </td>
                 </tr>

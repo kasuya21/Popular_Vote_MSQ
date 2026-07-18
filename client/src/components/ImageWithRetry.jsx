@@ -1,16 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import LoadingSpinner from './LoadingSpinner';
 
 const ImageWithRetry = ({ src, alt, fallback = 'https://placehold.co/300x400/1a1730/e8dfc8?text=No+Image', maxRetries = 999, className, style, ...props }) => {
   const [retryCount, setRetryCount] = useState(0);
   const [imgSrc, setImgSrc] = useState(src);
   const [isLoading, setIsLoading] = useState(true);
+  const imgRef = useRef(null);
 
   // Reset when src changes
   useEffect(() => {
-    setImgSrc(src);
-    setRetryCount(0);
-    setIsLoading(true);
+    if (src !== imgSrc) {
+      setImgSrc(src);
+      setRetryCount(0);
+      setIsLoading(true);
+    }
   }, [src]);
+
+  // Check if image is already loaded (e.g., from cache)
+  useEffect(() => {
+    if (imgRef.current && imgRef.current.complete) {
+      if (imgRef.current.naturalHeight > 0) {
+        setIsLoading(false);
+      }
+    }
+  }, [imgSrc]);
 
   const handleError = () => {
     if (retryCount < maxRetries) {
@@ -33,15 +46,16 @@ const ImageWithRetry = ({ src, alt, fallback = 'https://placehold.co/300x400/1a1
       {/* Loading Spinner overlay */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#050505]/40 backdrop-blur-sm z-10 rounded-[inherit]">
-          <span className="loading loading-spinner text-[#d4af37] w-5 h-5"></span>
+          <LoadingSpinner small />
         </div>
       )}
       
       {/* Actual Image */}
       <img
+        ref={imgRef}
         src={imgSrc}
         alt={alt}
-        className="w-full h-full object-cover rounded-[inherit]"
+        className={`w-full h-full object-cover rounded-[inherit] transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
         onError={handleError}
         onLoad={handleLoad}
         {...props}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PackageSearch, Plus, Edit2, PackageX, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getAdminPackages, createPackage, updatePackage, togglePackageActive } from '../../services/api';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const AdminPackages = () => {
   const queryClient = useQueryClient();
@@ -95,7 +96,7 @@ const AdminPackages = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <span className="loading loading-spinner loading-lg text-[#d4af37]"></span>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -308,7 +309,7 @@ const AdminPackages = () => {
                   className="flex-1 px-4 py-3 rounded-2xl btn-primary-gradient text-[#050505] font-bold hover:opacity-90 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
                 >
                   {(createMutation.isPending || updateMutation.isPending) ? (
-                    <span className="loading loading-spinner loading-md"></span>
+                    <LoadingSpinner small />
                   ) : (
                     'บันทึกข้อมูล'
                   )}

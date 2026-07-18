@@ -6,6 +6,7 @@ import CandidateCard from '../components/CandidateCard';
 import VotePackageCard from '../components/VotePackageCard';
 import CountdownTimer from '../components/CountdownTimer';
 import { getCandidates, getVotePackages, getSystemSettings } from '../services/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -112,7 +113,7 @@ const Home = () => {
               <Link to="/candidates"
                 className="btn-primary-gradient px-10 py-4 rounded-full text-base font-bold flex items-center justify-center gap-3 w-full sm:w-auto tracking-widest transition-all hover:opacity-90 hover:-translate-y-0.5"
                 style={{ fontFamily: "'Cinzel', serif" }}>
-                โหวตเลย <ArrowRight size={18} />
+                ดูผู้สมัครทั้งหมด <ArrowRight size={18} />
               </Link>
               <Link to="/ranking"
                 className="btn-outline-glass px-10 py-4 rounded-full text-base w-full sm:w-auto flex items-center justify-center gap-3 tracking-widest"
@@ -179,7 +180,7 @@ const Home = () => {
 
         {isCandidatesLoading ? (
           <div className="flex justify-center py-12">
-            <span className="loading loading-spinner loading-lg text-[#d4af37]"></span>
+            <LoadingSpinner />
           </div>
         ) : (
           <div className="flex overflow-x-auto md:overflow-visible snap-x snap-mandatory md:flex md:flex-row md:justify-center gap-6 md:gap-8 pt-4 pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
@@ -212,42 +213,6 @@ const Home = () => {
       </section>
       )}
 
-      {/* ══════════ Packages ══════════ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section heading with divider */}
-        <div className="flex items-center gap-6 mb-12">
-          <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(212,160,23,0.3))' }} />
-          <div className="text-center flex-shrink-0">
-            <p className="text-xs tracking-[0.2em] uppercase text-[#d4af37] mb-1 flex items-center justify-center gap-2" style={{ fontFamily: "'Cinzel', serif" }}>
-              <Heart size={11} className="fill-current" /> Vote Packages
-            </p>
-            <h2 className="text-2xl md:text-3xl font-bold text-[#f5f5f5]">แพ็กเกจโหวต</h2>
-          </div>
-          <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(212,160,23,0.3), transparent)' }} />
-        </div>
-
-        {isPackagesLoading ? (
-          <div className="flex justify-center py-8">
-            <span className="loading loading-spinner text-[#d4af37]"></span>
-          </div>
-        ) : (
-          <div className="flex overflow-x-auto snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
-            {popularPackages.map((pkg) => (
-              <div key={pkg.id} className="min-w-[260px] w-[75vw] sm:w-auto snap-center flex-shrink-0">
-                <VotePackageCard pkg={pkg} isSelected={false} onSelect={() => { }} />
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="text-center mt-8">
-          <Link to="/candidates"
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-full text-sm font-bold tracking-widest transition-all hover:opacity-90 hover:-translate-y-0.5"
-            style={{ background: 'linear-gradient(135deg, rgba(212,160,23,0.15), rgba(212,160,23,0.05))', border: '1px solid rgba(212,160,23,0.3)', color: '#f0c94b', fontFamily: "'Cinzel', serif" }}>
-            เลือกผู้สมัครและโหวตเลย <ArrowRight size={16} />
-          </Link>
-        </div>
-      </section>
     </div>
   );
 };

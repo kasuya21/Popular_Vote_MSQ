@@ -4,6 +4,7 @@ import { Plus, Search, Edit, Ban, CheckCircle2, MoreVertical, X, Save, Upload, T
 import { getAdminCandidates, createCandidate, updateCandidate, deleteCandidate, uploadImage } from '../../services/api';
 import { resolveImageUrl } from '../../utils/imageUtils';
 import ImageWithRetry from '../../components/ImageWithRetry';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const initialForm = {
   candidateNumber: '',
@@ -165,7 +166,7 @@ const AdminCandidates = () => {
               {isLoading ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-8 text-center text-[#a3a3a3]">
-                    <span className="loading loading-spinner loading-md text-[#d4af37]"></span>
+                    <LoadingSpinner />
                   </td>
                 </tr>
               ) : filteredCandidates.map(candidate => (
@@ -271,7 +272,7 @@ const AdminCandidates = () => {
                     <div className="flex gap-2">
                       <input type="url" placeholder="https://..." value={formData.profileImage} onChange={e => setFormData({...formData, profileImage: e.target.value})} className="flex-1 px-3 py-2 bg-[#050505] border border-[#d4af37]/30 rounded-lg text-[#f5f5f5] focus:outline-none focus:ring-2 focus:ring-[#d4af37]/50" />
                       <label className={`cursor-pointer px-4 py-2 bg-[#d4af37]/20 border border-[#d4af37]/50 rounded-lg text-[#d4af37] font-medium hover:bg-[#d4af37]/30 transition flex items-center justify-center gap-2 ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                        {isUploading ? <span className="loading loading-spinner loading-sm"></span> : <Upload size={18} />}
+                        {isUploading ? <LoadingSpinner small /> : <Upload size={18} />}
                         <span>อัปโหลด</span>
                         <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
                       </label>
@@ -295,7 +296,7 @@ const AdminCandidates = () => {
                 ยกเลิก
               </button>
               <button type="submit" form="candidate-form" disabled={createMutation.isPending || updateMutation.isPending} className="px-6 py-2 rounded-lg btn-primary-gradient text-[#050505] font-bold flex items-center gap-2 hover:opacity-90 disabled:opacity-50">
-                {(createMutation.isPending || updateMutation.isPending) ? <span className="loading loading-spinner loading-sm"></span> : <Save size={18} />}
+                {(createMutation.isPending || updateMutation.isPending) ? <LoadingSpinner small /> : <Save size={18} />}
                 บันทึกข้อมูล
               </button>
             </div>

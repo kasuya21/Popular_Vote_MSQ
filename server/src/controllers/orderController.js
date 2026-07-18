@@ -457,3 +457,163 @@ exports.rejectSlip = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.createPOSOrder = async (req, res, next) => {
+  try {
+    const { candidateId, packageId, paymentMethod, customerName, quantity = 1 } = req.body;
+    
+    if (!candidateId || !packageId || !paymentMethod) {
+       return next(new AppError('Missing required fields', 400));
+    }
+    
+    if (!['CASH', 'TRANSFER'].includes(paymentMethod)) {
+       return next(new AppError('Invalid payment method', 400));
+    }
+
+    if (quantity < 1 || !Number.isInteger(quantity)) {
+       return next(new AppError('Invalid quantity', 400));
+    }
+
+    const candidate = await prisma.candidate.findFirst({
+      where: { id: candidateId, isActive: true, isDeleted: false }
+    });
+    if (!candidate) return next(new AppError('Candidate not found or inactive', 404));
+
+    const pkg = await prisma.votePackage.findFirst({
+      where: { id: packageId, isActive: true }
+    });
+    if (!pkg) return next(new AppError('Package not found or inactive', 404));
+
+    const orderNo = `POS-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+
+    const totalAmount = pkg.price * quantity;
+    const totalVotes = pkg.voteAmount * quantity;
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Create Order
+      const order = await tx.order.create({
+        data: {
+          orderNo,
+          idempotencyKey: orderNo,
+          candidateId: candidateId,
+          packageId: packageId,
+          customerName: customerName || 'Walk-in Customer',
+          customerContact: 'POS',
+          customerContactHash: 'POS',
+          amount: totalAmount,
+          expectedVoteAmount: totalVotes,
+          status: 'PAID',
+          paymentProvider: paymentMethod === 'CASH' ? 'POS_CASH' : 'POS_TRANSFER',
+          providerReference: `POS-${Date.now()}`,
+          paidAt: new Date(),
+        }
+      });
+
+      // 2. Create PaymentTransaction
+      await tx.paymentTransaction.create({
+        data: {
+          orderId: order.id,
+          provider: paymentMethod === 'CASH' ? 'POS_CASH' : 'POS_TRANSFER',
+          providerEventId: orderNo,
+          providerTransactionId: `TX-${Date.now()}`,
+          providerReference: order.providerReference,
+          amount: totalAmount,
+          status: 'PAID',
+          paidAt: new Date(),
+          signatureValid: true
+        }
+      });
+
+      // 3. Create Vote
+      await tx.vote.create({
+        data: {
+          candidateId: order.candidateId,
+          orderId: order.id,
+          quantity: totalVotes
+        }
+      });
+
+      // 4. Increment Vote Count
+      await tx.candidate.update({
+        where: { id: order.candidateId },
+        data: { voteCount: { increment: totalVotes } }
+      });
+
+      // 5. Audit log
+      await tx.auditLog.create({
+        data: {
+          adminId: req.admin.id,
+          action: 'CREATE_POS_ORDER',
+          entityType: 'Order',
+          entityId: order.id,
+          orderId: order.id,
+          afterData: { paymentMethod, quantity, unitPrice: pkg.price, totalAmount, totalVotes }
+        }
+      });
+    });
+
+    res.status(201).json({ success: true, message: 'POS Order created successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteOrder = async (req, res, next) => {
+  try {
+    const { orderNo } = req.params;
+    
+    const order = await prisma.order.findUnique({ where: { orderNo } });
+    if (!order) return next(new AppError('Order not found', 404));
+    
+    if (order.status === 'CANCELLED') {
+      return next(new AppError('Order is already cancelled', 400));
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Mark Order as CANCELLED
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: 'CANCELLED' }
+      });
+
+      // 2. Delete Vote records associated with this order
+      // We use deleteMany in case there are multiple (though there should only be one)
+      await tx.vote.deleteMany({
+        where: { orderId: order.id }
+      });
+
+      // 3. Decrement Vote Count (only if it was PAID and votes were actually added)
+      if (order.status === 'PAID' && order.expectedVoteAmount > 0) {
+        await tx.candidate.update({
+          where: { id: order.candidateId },
+          data: { 
+            voteCount: { decrement: order.expectedVoteAmount } 
+          }
+        });
+      }
+
+      // 4. Update PaymentTransaction if it exists
+      await tx.paymentTransaction.updateMany({
+        where: { orderId: order.id },
+        data: { status: 'CANCELLED' }
+      });
+
+      // 5. Audit log
+      await tx.auditLog.create({
+        data: {
+          adminId: req.admin.id,
+          action: 'DELETE_POS_ORDER',
+          entityType: 'Order',
+          entityId: order.id,
+          orderId: order.id,
+          afterData: { orderNo, previousStatus: order.status, deductedVotes: order.expectedVoteAmount }
+        }
+      });
+    });
+
+    res.status(200).json({ success: true, message: 'Order cancelled and votes deducted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+

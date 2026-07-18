@@ -45,10 +45,10 @@ router.get('/payments/reconciliation', requireRole('SUPER_ADMIN', 'FINANCE_ADMIN
 router.get('/payments/:orderNo', requireRole('SUPER_ADMIN', 'FINANCE_ADMIN', 'VIEWER'), paymentController.getPaymentDetail);
 router.patch('/payments/:orderNo/note', requireRole('SUPER_ADMIN', 'FINANCE_ADMIN'), paymentController.updatePaymentNote);
 
-// --- MANUAL SLIP APPROVAL ---
+// --- POS & LOGS ---
 const orderController = require('../controllers/orderController');
-router.post('/orders/:orderNo/approve', requireRole('SUPER_ADMIN', 'FINANCE_ADMIN', 'EVENT_ADMIN'), orderController.approveSlip);
-router.post('/orders/:orderNo/reject', requireRole('SUPER_ADMIN', 'FINANCE_ADMIN', 'EVENT_ADMIN'), orderController.rejectSlip);
+router.post('/orders/pos', requireRole('SUPER_ADMIN', 'FINANCE_ADMIN', 'EVENT_ADMIN'), orderController.createPOSOrder);
+router.delete('/orders/:orderNo', requireRole('SUPER_ADMIN', 'FINANCE_ADMIN', 'EVENT_ADMIN'), orderController.deleteOrder);
 
 // --- REFUNDS ---
 router.get('/refunds', requireRole('SUPER_ADMIN', 'FINANCE_ADMIN', 'VIEWER'), paymentController.getRefunds);

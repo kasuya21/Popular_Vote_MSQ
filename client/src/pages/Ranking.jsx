@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getRankings, getSystemSettings } from '../services/api';
 import { resolveImageUrl } from '../utils/imageUtils';
 import ImageWithRetry from '../components/ImageWithRetry';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 // ── Medal colours ──────────────────────────────────────────────
 const RANK_META = {
@@ -351,7 +352,7 @@ const Ranking = () => {
 
       {loading && !refreshing ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <span className="loading loading-spinner loading-lg text-[#d4a017]"></span>
+          <LoadingSpinner />
           <p className="text-[#e8dfc8]/30 text-sm tracking-widest animate-pulse" style={{ fontFamily: "'Cinzel', serif" }}>
             LOADING STANDINGS...
           </p>

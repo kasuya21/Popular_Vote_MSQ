@@ -11,10 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Candidates from './pages/Candidates';
 import CandidateDetail from './pages/CandidateDetail';
-import Checkout from './pages/Checkout';
-import Payment from './pages/Payment';
 import Ranking from './pages/Ranking';
-import TrackOrder from './pages/TrackOrder';
 import Terms from './pages/Terms';
 
 // Admin Pages
@@ -24,8 +21,7 @@ import AdminCandidates from './pages/admin/AdminCandidates';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminReports from './pages/admin/AdminReports';
 import AdminPackages from './pages/admin/AdminPackages';
-
-
+import AdminPOS from './pages/admin/AdminPOS';
 
 function App() {
   return (
@@ -37,10 +33,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="candidates" element={<Candidates />} />
           <Route path="candidate/:id" element={<CandidateDetail />} />
-          <Route path="checkout" element={<Checkout />} />
-          <Route path="payment/:orderNo" element={<Payment />} />
           <Route path="ranking" element={<Ranking />} />
-          <Route path="track-order" element={<TrackOrder />} />
           <Route path="terms" element={<Terms />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
@@ -60,6 +53,7 @@ function App() {
           <Route path="packages" element={<AdminPackages />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="reports" element={<AdminReports />} />
+          <Route path="pos" element={<AdminPOS />} />
         </Route>
       </Routes>
     </Router>

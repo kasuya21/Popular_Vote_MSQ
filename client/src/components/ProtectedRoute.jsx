@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import LoadingSpinner from './LoadingSpinner';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, loading } = useAuth();
@@ -9,7 +10,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <span className="loading loading-spinner loading-lg text-violet-600"></span>
+        <LoadingSpinner small />
       </div>
     );
   }
