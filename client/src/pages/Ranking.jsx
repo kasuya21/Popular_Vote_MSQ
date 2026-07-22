@@ -225,28 +225,23 @@ const TABS = [
 
 // ─── Main Ranking component ───────────────────────────────────
 const Ranking = () => {
-  const [rankings, setRankings] = useState([]);
   const [activeTab, setActiveTab] = useState('STAR');
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   const { data: settings } = useQuery({ queryKey: ['systemSettings'], queryFn: getSystemSettings });
 
-  const fetchRankings = async (cat, isRefresh = false) => {
-    if (isRefresh) setRefreshing(true); else setLoading(true);
-    try {
-      const data = await getRankings(cat);
-      setRankings(data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+  const {
+    data: rankings = [],
+    isLoading: loading,
+    isFetching,
+    refetch
+  } = useQuery({
+    queryKey: ['rankings', activeTab],
+    queryFn: () => getRankings(activeTab),
+    refetchInterval: 5000, // Auto refresh every 5 seconds
+  });
 
-  useEffect(() => { fetchRankings(activeTab); }, [activeTab]);
+  const refreshing = isFetching && !loading;
 
   const top3 = rankings.slice(0, 3);
   const rest = rankings.slice(3);
@@ -335,7 +330,7 @@ const Ranking = () => {
         </div>
 
         <button
-          onClick={() => fetchRankings(activeTab, true)}
+          onClick={() => refetch()}
           disabled={loading || refreshing}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95 disabled:opacity-40"
           style={{
